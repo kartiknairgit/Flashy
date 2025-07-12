@@ -50,6 +50,13 @@ body {
     text-align: right;
 }
 
+.hud-top-center {
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+}
+
 .hud-bottom {
     bottom: 20px;
     left: 50%;
@@ -75,6 +82,29 @@ body {
     box-shadow: 0 0 10px #00ffff;
 }
 
+.instructions {
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid #00ffff;
+    border-radius: 10px;
+    padding: 15px 25px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+}
+
+.instruction-line {
+    font-size: 13px;
+    margin: 3px 0;
+    color: #ffffff;
+    text-shadow: 0 0 5px #00ffff;
+    font-weight: 400;
+}
+
+.instruction-line:first-child {
+    color: #ff6666;
+    font-weight: 700;
+    text-shadow: 0 0 8px #ff6666;
+}
+
 .pulse {
     animation: pulse 2s infinite;
 }
@@ -84,19 +114,126 @@ body {
     50% { opacity: 0.3; }
 }
 
-#startScreen {
-    position: absolute;
+#startScreen, #instructionsScreen, #loadingScreen {
+    position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.9);
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.95);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     z-index: 100;
     pointer-events: all;
+}
+
+#loadingScreen {
+    z-index: 200;
+}
+
+#instructionsScreen {
+    z-index: 150;
+    background: rgba(0, 0, 0, 0.98);
+}
+
+.flash-text {
+    font-size: 8em;
+    font-weight: 900;
+    color: #00ffff;
+    text-shadow: 
+        0 0 20px #00ffff,
+        0 0 40px #00ffff,
+        0 0 60px #00ffff,
+        0 0 80px #00ffff;
+    animation: flashGlow 0.1s ease-in-out infinite alternate;
+    font-family: 'Orbitron', monospace;
+    letter-spacing: 0.2em;
+}
+
+@keyframes flashGlow {
+    from { 
+        text-shadow: 
+            0 0 20px #00ffff,
+            0 0 40px #00ffff,
+            0 0 60px #00ffff,
+            0 0 80px #00ffff;
+    }
+    to { 
+        text-shadow: 
+            0 0 30px #ffffff,
+            0 0 50px #00ffff,
+            0 0 70px #00ffff,
+            0 0 100px #00ffff;
+    }
+}
+
+.loading-bar {
+    width: 300px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid #00ffff;
+    margin-top: 40px;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.loading-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00ffff, #ffffff);
+    width: 0%;
+    animation: loadingProgress 2s ease-out forwards;
+    box-shadow: 0 0 10px #00ffff;
+}
+
+@keyframes loadingProgress {
+    to { width: 100%; }
+}
+
+.instructions-content {
+    margin: 40px 0;
+    text-align: left;
+    max-width: 600px;
+    width: 90%;
+}
+
+.instruction-item {
+    display: flex;
+    align-items: center;
+    margin: 20px 0;
+    font-size: 1.3em;
+    color: #ffffff;
+    padding: 10px 15px;
+    background: rgba(0, 255, 255, 0.1);
+    border-left: 3px solid #00ffff;
+    border-radius: 5px;
+}
+
+.instruction-icon {
+    font-size: 1.8em;
+    margin-right: 20px;
+    width: 40px;
+    text-align: center;
+}
+
+.instruction-text {
+    font-family: 'Orbitron', monospace;
+    text-shadow: 0 0 5px #00ffff;
+    font-weight: 400;
+}
+
+.high-score {
+    margin-top: 40px;
+    font-size: 1.4em;
+    color: #ffaa00;
+    text-shadow: 0 0 15px #ffaa00;
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    padding: 15px 25px;
+    border: 2px solid #ffaa00;
+    border-radius: 10px;
+    background: rgba(255, 170, 0, 0.1);
 }
 
 .title {
@@ -113,18 +250,9 @@ body {
     to { text-shadow: 0 0 50px #00ffff, 0 0 70px #0099cc; }
 }
 
-.subtitle {
-    font-size: 1.2em;
-    color: #ffffff;
-    margin-bottom: 40px;
-    text-align: center;
-    line-height: 1.6;
-    opacity: 0.8;
-}
-
 .start-btn {
-    padding: 15px 30px;
-    font-size: 1.2em;
+    padding: 20px 40px;
+    font-size: 1.4em;
     font-family: 'Orbitron', monospace;
     background: linear-gradient(45deg, #00ffff, #0099cc);
     color: #000;
@@ -134,8 +262,10 @@ body {
     transition: all 0.3s ease;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
     pointer-events: all;
+    margin-top: 20px;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
 }
 
 .start-btn:hover {
@@ -153,9 +283,8 @@ body {
         font-size: 2.5em;
     }
     
-    .subtitle {
-        font-size: 1em;
-        padding: 0 20px;
+    .flash-text {
+        font-size: 4em;
     }
     
     .hud {
@@ -164,5 +293,50 @@ body {
     
     .energy-bar {
         width: 150px;
+    }
+    
+    .instructions {
+        padding: 10px 15px;
+    }
+    
+    .instruction-line {
+        font-size: 11px;
+    }
+    
+    .instruction-item {
+        font-size: 1em;
+        margin: 15px 0;
+        padding: 8px 12px;
+    }
+    
+    .instruction-icon {
+        font-size: 1.4em;
+        margin-right: 15px;
+        width: 30px;
+    }
+    
+    .instruction-text {
+        font-size: 0.9em;
+    }
+    
+    .loading-bar {
+        width: 250px;
+    }
+    
+    .start-btn {
+        padding: 15px 30px;
+        font-size: 1.2em;
+        letter-spacing: 2px;
+    }
+    
+    .high-score {
+        font-size: 1.1em;
+        padding: 12px 20px;
+        margin-top: 25px;
+    }
+    
+    .instructions-content {
+        margin: 25px 0;
+        width: 95%;
     }
 }

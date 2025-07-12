@@ -7,10 +7,43 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="startScreen">
+    <div id="loadingScreen">
+        <div class="flash-text">FLASH</div>
+        <div class="loading-bar">
+            <div class="loading-fill"></div>
+        </div>
+    </div>
+    
+    <div id="instructionsScreen">
         <h1 class="title">COSMIC EXPLORER</h1>
-        <p class="subtitle">Navigate through space • Collect energy crystals • Avoid asteroids<br>
-        Use WASD or Arrow keys to move • Mouse to aim and shoot</p>
+        <div class="instructions-content">
+            <div class="instruction-item">
+                <span class="instruction-icon">🚀</span>
+                <span class="instruction-text">NEVER STOP MOVING OR YOU DIE</span>
+            </div>
+            <div class="instruction-item">
+                <span class="instruction-icon">🎯</span>
+                <span class="instruction-text">WASD/Arrows + Mouse to Aim & Shoot</span>
+            </div>
+            <div class="instruction-item">
+                <span class="instruction-icon">🔴</span>
+                <span class="instruction-text">Destroy Red Enemies (2 hits each)</span>
+            </div>
+            <div class="instruction-item">
+                <span class="instruction-icon">🔷</span>
+                <span class="instruction-text">Collect Blue Crystals for Health</span>
+            </div>
+            <div class="instruction-item">
+                <span class="instruction-icon">⬜</span>
+                <span class="instruction-text">Avoid Gray Asteroids (Instant Death)</span>
+            </div>
+        </div>
+        <button id="startBtn" class="start-btn">Launch Mission</button>
+        <div class="high-score">High Score: <span id="highScore">0</span></div>
+    </div>
+
+    <div id="startScreen" style="display: none;">
+        <h1 class="title">COSMIC EXPLORER</h1>
         <button id="startBtn" class="start-btn">Launch Mission</button>
     </div>
     
@@ -28,6 +61,14 @@
         <div class="hud hud-top-right">
             <div>Health: <span id="health">100</span></div>
             <div>Level: <span id="level">1</span></div>
+        </div>
+        
+        <div class="hud hud-top-center" id="gameInstructions" style="display: none;">
+            <div class="instructions">
+                <div class="instruction-line">🚀 NEVER STOP MOVING OR YOU DIE</div>
+                <div class="instruction-line">🎯 WASD/Arrows + Mouse to Aim & Shoot</div>
+                <div class="instruction-line">🔴 Destroy Red Enemies • 🔷 Collect Blue Health • ⬜ Avoid Gray Asteroids</div>
+            </div>
         </div>
         
         <div class="hud hud-bottom pulse">

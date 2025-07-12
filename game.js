@@ -10,7 +10,10 @@ const game = {
     crystals: 0,
     health: 100,
     level: 1,
-    energy: 100
+    energy: 100,
+    deathTimer: 0,
+    maxDeathTime: 120, // 2 seconds at 60fps before death
+    highScore: localStorage.getItem('cosmicExplorerHighScore') || 0
 };
 
 // Player object
@@ -32,6 +35,8 @@ const asteroids = [];
 const crystals = [];
 const particles = [];
 const bullets = [];
+const enemies = [];
+const enemyBullets = [];
 
 // Input handling
 const keys = {};
@@ -56,14 +61,38 @@ function init() {
     });
     document.addEventListener('click', shoot);
     
-    // Start button
-    document.getElementById('startBtn').addEventListener('click', startGame);
+    // Start loading sequence
+    showLoadingScreen();
     
     // Initialize game objects
     createStars();
     
     // Start the game loop
     gameLoop();
+}
+
+function showLoadingScreen() {
+    // Show loading screen for 2 seconds
+    setTimeout(() => {
+        document.getElementById('loadingScreen').style.display = 'none';
+        showInstructionsScreen();
+    }, 2000);
+}
+
+function showInstructionsScreen() {
+    document.getElementById('instructionsScreen').style.display = 'flex';
+    document.getElementById('highScore').textContent = game.highScore;
+    
+    // Auto-hide after 5 seconds or wait for button click
+    const autoHideTimer = setTimeout(() => {
+        startGame();
+    }, 5000);
+    
+    // Start button event listener
+    document.getElementById('startBtn').addEventListener('click', () => {
+        clearTimeout(autoHideTimer);
+        startGame();
+    });
 }
 
 function resizeCanvas() {
@@ -78,13 +107,16 @@ function resizeCanvas() {
 }
 
 function startGame() {
-    document.getElementById('startScreen').style.display = 'none';
+    document.getElementById('instructionsScreen').style.display = 'none';
+    document.getElementById('gameInstructions').style.display = 'block';
     game.gameRunning = true;
-    updateStatus("Mission started! Collect crystals and avoid asteroids!");
+    game.deathTimer = 0;
+    updateStatus("Keep moving or die! Destroy enemies and collect health crystals!");
     
     // Spawn initial game objects
     spawnAsteroids();
     spawnCrystals();
+    spawnEnemies();
 }
 
 function createStars() {
@@ -116,7 +148,7 @@ function spawnAsteroids() {
 }
 
 function spawnCrystals() {
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 4; i++) {
         crystals.push({
             x: Math.random() * game.width,
             y: Math.random() * game.height,
@@ -125,6 +157,23 @@ function spawnCrystals() {
             rotation: 0,
             rotationSpeed: 0.05,
             pulse: 0
+        });
+    }
+}
+
+function spawnEnemies() {
+    for (let i = 0; i < 2 + Math.floor(game.level / 2); i++) {
+        enemies.push({
+            x: Math.random() * game.width,
+            y: Math.random() * game.height,
+            width: 25,
+            height: 25,
+            vx: (Math.random() - 0.5) * 3,
+            vy: (Math.random() - 0.5) * 3,
+            angle: 0,
+            shootTimer: 0,
+            shootDelay: 60 + Math.random() * 60,
+            health: 2
         });
     }
 }
@@ -142,7 +191,9 @@ function shoot() {
             y: player.y,
             vx: (dx / distance) * 8,
             vy: (dy / distance) * 8,
-            life: 60
+            life: 60,
+            width: 4,
+            height: 4
         });
     }
 }
@@ -153,6 +204,9 @@ function update(deltaTime) {
     // Update player
     updatePlayer();
     
+    // Check if player is moving (Tron rule - must keep moving!)
+    checkMovement();
+    
     // Update stars
     updateStars();
     
@@ -162,8 +216,14 @@ function update(deltaTime) {
     // Update crystals
     updateCrystals();
     
+    // Update enemies
+    updateEnemies();
+    
     // Update bullets
     updateBullets();
+    
+    // Update enemy bullets
+    updateEnemyBullets();
     
     // Update particles
     updateParticles();
@@ -175,12 +235,36 @@ function update(deltaTime) {
     updateUI();
     
     // Spawn new objects
-    if (asteroids.length < 2 + game.level) {
+    if (asteroids.length < 3 + game.level) {
         spawnAsteroids();
     }
     
     if (crystals.length < 3) {
         spawnCrystals();
+    }
+    
+    if (enemies.length < 1 + Math.floor(game.level / 2)) {
+        spawnEnemies();
+    }
+}
+
+function checkMovement() {
+    // Tron rule: if player stops moving, death timer starts
+    const speed = Math.sqrt(player.vx * player.vx + player.vy * player.vy);
+    
+    if (speed < 0.5) {
+        game.deathTimer++;
+        if (game.deathTimer > game.maxDeathTime) {
+            game.health = 0;
+            gameOver();
+            return;
+        }
+        // Visual warning
+        if (game.deathTimer > 60) {
+            updateStatus(`DANGER: KEEP MOVING! ${Math.ceil((game.maxDeathTime - game.deathTimer) / 60)}s`);
+        }
+    } else {
+        game.deathTimer = 0;
     }
 }
 
@@ -256,6 +340,65 @@ function updateCrystals() {
     });
 }
 
+function updateEnemies() {
+    enemies.forEach((enemy, index) => {
+        // Move towards player
+        const dx = player.x - enemy.x;
+        const dy = player.y - enemy.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance > 0) {
+            enemy.vx += (dx / distance) * 0.1;
+            enemy.vy += (dy / distance) * 0.1;
+        }
+        
+        // Limit speed
+        const speed = Math.sqrt(enemy.vx * enemy.vx + enemy.vy * enemy.vy);
+        if (speed > 2) {
+            enemy.vx = (enemy.vx / speed) * 2;
+            enemy.vy = (enemy.vy / speed) * 2;
+        }
+        
+        enemy.x += enemy.vx;
+        enemy.y += enemy.vy;
+        
+        // Calculate angle to player
+        enemy.angle = Math.atan2(dy, dx);
+        
+        // Wrap around screen
+        if (enemy.x < -enemy.width) enemy.x = game.width;
+        if (enemy.x > game.width + enemy.width) enemy.x = -enemy.width;
+        if (enemy.y < -enemy.height) enemy.y = game.height;
+        if (enemy.y > game.height + enemy.height) enemy.y = -enemy.height;
+        
+        // Shooting
+        enemy.shootTimer++;
+        if (enemy.shootTimer >= enemy.shootDelay && distance < 300) {
+            enemyShoot(enemy);
+            enemy.shootTimer = 0;
+            enemy.shootDelay = 60 + Math.random() * 60;
+        }
+    });
+}
+
+function enemyShoot(enemy) {
+    const dx = player.x - enemy.x;
+    const dy = player.y - enemy.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    if (distance > 0) {
+        enemyBullets.push({
+            x: enemy.x,
+            y: enemy.y,
+            vx: (dx / distance) * 6,
+            vy: (dy / distance) * 6,
+            life: 90,
+            width: 6,
+            height: 6
+        });
+    }
+}
+
 function updateBullets() {
     bullets.forEach((bullet, index) => {
         bullet.x += bullet.vx;
@@ -264,6 +407,18 @@ function updateBullets() {
         
         if (bullet.life <= 0 || bullet.x < 0 || bullet.x > game.width || bullet.y < 0 || bullet.y > game.height) {
             bullets.splice(index, 1);
+        }
+    });
+}
+
+function updateEnemyBullets() {
+    enemyBullets.forEach((bullet, index) => {
+        bullet.x += bullet.vx;
+        bullet.y += bullet.vy;
+        bullet.life--;
+        
+        if (bullet.life <= 0 || bullet.x < 0 || bullet.x > game.width || bullet.y < 0 || bullet.y > game.height) {
+            enemyBullets.splice(index, 1);
         }
     });
 }
@@ -282,31 +437,47 @@ function updateParticles() {
 }
 
 function checkCollisions() {
-    // Player vs asteroids
+    // Player vs asteroids - INSTANT DEATH
     asteroids.forEach((asteroid, index) => {
         if (collision(player, asteroid)) {
-            game.health -= 10;
-            createExplosion(asteroid.x, asteroid.y, '#ff4444');
-            asteroids.splice(index, 1);
-            
-            if (game.health <= 0) {
-                gameOver();
-            }
+            game.health = 0;
+            createExplosion(player.x, player.y, '#ff4444');
+            gameOver();
         }
     });
     
-    // Player vs crystals
+    // Player vs enemies - INSTANT DEATH
+    enemies.forEach((enemy, index) => {
+        if (collision(player, enemy)) {
+            game.health = 0;
+            createExplosion(player.x, player.y, '#ff4444');
+            gameOver();
+        }
+    });
+    
+    // Player vs enemy bullets - INSTANT DEATH
+    enemyBullets.forEach((bullet, index) => {
+        if (collision(player, bullet)) {
+            game.health = 0;
+            createExplosion(player.x, player.y, '#ff4444');
+            enemyBullets.splice(index, 1);
+            gameOver();
+        }
+    });
+    
+    // Player vs crystals - HEALTH RESTORATION
     crystals.forEach((crystal, index) => {
         if (collision(player, crystal)) {
             game.crystals++;
             game.score += 100;
-            game.energy = Math.min(100, game.energy + 10);
+            game.health = Math.min(100, game.health + 25);
             createExplosion(crystal.x, crystal.y, '#00ffff');
             crystals.splice(index, 1);
+            updateStatus("Health restored!");
         }
     });
     
-    // Bullets vs asteroids
+    // Player bullets vs asteroids
     bullets.forEach((bullet, bulletIndex) => {
         asteroids.forEach((asteroid, asteroidIndex) => {
             if (collision(bullet, asteroid)) {
@@ -314,6 +485,23 @@ function checkCollisions() {
                 createExplosion(asteroid.x, asteroid.y, '#ffaa00');
                 bullets.splice(bulletIndex, 1);
                 asteroids.splice(asteroidIndex, 1);
+            }
+        });
+    });
+    
+    // Player bullets vs enemies
+    bullets.forEach((bullet, bulletIndex) => {
+        enemies.forEach((enemy, enemyIndex) => {
+            if (collision(bullet, enemy)) {
+                enemy.health--;
+                createExplosion(bullet.x, bullet.y, '#ff6600');
+                bullets.splice(bulletIndex, 1);
+                
+                if (enemy.health <= 0) {
+                    game.score += 200;
+                    createExplosion(enemy.x, enemy.y, '#ff0066');
+                    enemies.splice(enemyIndex, 1);
+                }
             }
         });
     });
@@ -399,10 +587,28 @@ function render() {
         game.ctx.restore();
     });
     
-    // Draw bullets
+    // Draw player bullets
     game.ctx.fillStyle = '#ffff00';
     bullets.forEach(bullet => {
         game.ctx.fillRect(bullet.x - 2, bullet.y - 2, 4, 4);
+    });
+    
+    // Draw enemies
+    enemies.forEach(enemy => {
+        game.ctx.save();
+        game.ctx.translate(enemy.x, enemy.y);
+        game.ctx.rotate(enemy.angle);
+        game.ctx.fillStyle = '#ff3333';
+        game.ctx.fillRect(-enemy.width/2, -enemy.height/2, enemy.width, enemy.height);
+        game.ctx.fillStyle = '#ff6666';
+        game.ctx.fillRect(enemy.width/2 - 8, -4, 10, 8);
+        game.ctx.restore();
+    });
+    
+    // Draw enemy bullets
+    game.ctx.fillStyle = '#ff0000';
+    enemyBullets.forEach(bullet => {
+        game.ctx.fillRect(bullet.x - 3, bullet.y - 3, 6, 6);
     });
     
     // Draw particles
@@ -434,7 +640,15 @@ function updateStatus(message) {
 
 function gameOver() {
     game.gameRunning = false;
-    updateStatus(`Game Over! Final Score: ${game.score}`);
+    
+    // Update high score
+    if (game.score > game.highScore) {
+        game.highScore = game.score;
+        localStorage.setItem('cosmicExplorerHighScore', game.highScore);
+        updateStatus(`NEW HIGH SCORE! ${game.score} points!`);
+    } else {
+        updateStatus(`GAME OVER! Score: ${game.score} | High Score: ${game.highScore}`);
+    }
     
     // Reset game state
     setTimeout(() => {
@@ -443,11 +657,17 @@ function gameOver() {
         game.crystals = 0;
         game.level = 1;
         game.energy = 100;
+        game.deathTimer = 0;
         asteroids.length = 0;
         crystals.length = 0;
+        enemies.length = 0;
         bullets.length = 0;
+        enemyBullets.length = 0;
         particles.length = 0;
-        document.getElementById('startScreen').style.display = 'flex';
+        player.vx = 0;
+        player.vy = 0;
+        document.getElementById('gameInstructions').style.display = 'none';
+        showInstructionsScreen();
         updateStatus("Ready for launch...");
     }, 3000);
 }
