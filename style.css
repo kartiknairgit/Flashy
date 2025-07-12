@@ -1,0 +1,168 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Orbitron', monospace;
+    background: radial-gradient(ellipse at center, #1a1a2e 0%, #16213e 35%, #0f0f23 100%);
+    overflow: hidden;
+    cursor: crosshair;
+    height: 100vh;
+}
+
+#gameCanvas {
+    display: block;
+    background: transparent;
+    image-rendering: pixelated;
+}
+
+#ui {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.hud {
+    position: absolute;
+    color: #00ffff;
+    font-size: 14px;
+    text-shadow: 0 0 10px #00ffff;
+    pointer-events: none;
+    font-weight: 400;
+}
+
+.hud-top-left {
+    top: 20px;
+    left: 20px;
+}
+
+.hud-top-right {
+    top: 20px;
+    right: 20px;
+    text-align: right;
+}
+
+.hud-bottom {
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+}
+
+.energy-bar {
+    width: 200px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid #00ffff;
+    margin-top: 5px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.energy-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #ff0066, #00ffff);
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px #00ffff;
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+#startScreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    pointer-events: all;
+}
+
+.title {
+    font-size: 4em;
+    font-weight: 900;
+    color: #00ffff;
+    text-shadow: 0 0 30px #00ffff;
+    margin-bottom: 20px;
+    animation: titleGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes titleGlow {
+    from { text-shadow: 0 0 30px #00ffff; }
+    to { text-shadow: 0 0 50px #00ffff, 0 0 70px #0099cc; }
+}
+
+.subtitle {
+    font-size: 1.2em;
+    color: #ffffff;
+    margin-bottom: 40px;
+    text-align: center;
+    line-height: 1.6;
+    opacity: 0.8;
+}
+
+.start-btn {
+    padding: 15px 30px;
+    font-size: 1.2em;
+    font-family: 'Orbitron', monospace;
+    background: linear-gradient(45deg, #00ffff, #0099cc);
+    color: #000;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    pointer-events: all;
+}
+
+.start-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 30px #00ffff;
+}
+
+.start-btn:active {
+    transform: scale(0.95);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .title {
+        font-size: 2.5em;
+    }
+    
+    .subtitle {
+        font-size: 1em;
+        padding: 0 20px;
+    }
+    
+    .hud {
+        font-size: 12px;
+    }
+    
+    .energy-bar {
+        width: 150px;
+    }
+}

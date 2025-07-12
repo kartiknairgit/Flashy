@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Explorer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="startScreen">
+        <h1 class="title">COSMIC EXPLORER</h1>
+        <p class="subtitle">Navigate through space • Collect energy crystals • Avoid asteroids<br>
+        Use WASD or Arrow keys to move • Mouse to aim and shoot</p>
+        <button id="startBtn" class="start-btn">Launch Mission</button>
+    </div>
+    
+    <canvas id="gameCanvas"></canvas>
+    
+    <div id="ui">
+        <div class="hud hud-top-left">
+            <div>Score: <span id="score">0</span></div>
+            <div>Crystals: <span id="crystals">0</span></div>
+            <div class="energy-bar">
+                <div id="energyFill" class="energy-fill"></div>
+            </div>
+        </div>
+        
+        <div class="hud hud-top-right">
+            <div>Health: <span id="health">100</span></div>
+            <div>Level: <span id="level">1</span></div>
+        </div>
+        
+        <div class="hud hud-bottom pulse">
+            <div id="statusText">Ready for launch...</div>
+        </div>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>
